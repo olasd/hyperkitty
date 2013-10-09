@@ -1,19 +1,20 @@
 %global pypi_name HyperKitty
+%global prerel 1
 
 Name:           hyperkitty
-Version:        0.1.6
-Release:        1%{?dist}
+Version:        0.1.7
+Release:        %{?prerel:0.}1%{?dist}
 Summary:        A web interface to access GNU Mailman v3 archives
 
 License:        GPLv3
 URL:            https://fedorahosted.org/hyperkitty/
-Source0:        http://pypi.python.org/packages/source/H/%{pypi_name}/%{pypi_name}-%{version}.tar.gz
+Source0:        http://pypi.python.org/packages/source/H/%{pypi_name}/%{pypi_name}-%{version}%{?prerel:dev}.tar.gz
 
 # To get SOURCE1:
 #   git clone https://github.com/hyperkitty/hyperkitty_standalone.git
 #   make sdist -C hyperkitty_standalone
 #   mv hyperkitty_standalone/dist/hyperkitty_standalone-%{version}.tar.gz .
-Source1:        hyperkitty_standalone-%{version}.tar.gz
+Source1:        hyperkitty_standalone-%{version}%{?prerel:dev}.tar.gz
 
 
 BuildArch:      noarch
@@ -44,7 +45,8 @@ BuildRequires:  python-django-south
 Requires:       django-gravatar2
 Requires:       django-social-auth >= 0.7.1
 Requires:       django-rest-framework >= 2.2.0
-Requires:       mailman >= 3:3.0.0
+#Requires:       mailman >= 3:3.0.0
+Requires:       mailman3
 Requires:       kittystore
 Requires:       django-crispy-forms
 Requires:       django-assets
@@ -70,10 +72,10 @@ The code is available from: https://github.com/hyperkitty/hyperkitty .
 The documentation can be browsed online at https://hyperkitty.readthedocs.org .
 
 %prep
-%setup -q -n %{pypi_name}-%{version} -a 1
+%setup -q -n %{pypi_name}-%{version}%{?prerel:dev} -a 1
 # Remove bundled egg-info
 rm -rf %{pypi_name}.egg-info
-mv hyperkitty_standalone-%{version} hyperkitty_standalone
+mv hyperkitty_standalone-%{version}%{?prerel:dev} hyperkitty_standalone
 # remove shebang on manage.py
 sed -i -e '1d' hyperkitty_standalone/manage.py
 # remove executable permissions on wsgi.py
@@ -139,21 +141,13 @@ rm -f hyperkitty_standalone/__init__.py
     assets build --parse-templates &>/dev/null || :
 
 
-%preun
-# The static files are a cache and can be removed with the package
-if [ $1 -eq 0 ] ; then
-    # Package removal, not upgrade
-    rm -rf %{_localstatedir}/lib/%{name}/sites/default/static
-fi
-
-
 %files
 %doc html README.rst COPYING.txt
 %config(noreplace) %{_sysconfdir}/%{name}
 %config(noreplace) %attr(640,root,apache) %{_sysconfdir}/%{name}/sites/default/settings.py
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/hyperkitty.conf
 %{python_sitelib}/%{name}
-%{python_sitelib}/%{pypi_name}-%{version}-py?.?.egg-info
+%{python_sitelib}/%{pypi_name}-%{version}%{?prerel:dev}-py?.?.egg-info
 %dir %{_localstatedir}/lib/%{name}
 %dir %{_localstatedir}/lib/%{name}/sites
 %dir %{_localstatedir}/lib/%{name}/sites/default
@@ -162,6 +156,10 @@ fi
 
 
 %changelog
+* Thu Aug 15 2013 Aurelien Bompard <abompard@fedoraproject.org> - 0.1.7-0.1
+- don't remove the static files cache on uninstall (it may have local
+  modifications)
+
 * Tue Jul 23 2013 Aurelien Bompard <abompard@fedoraproject.org> - 0.1.6-1
 - version 0.1.6
 

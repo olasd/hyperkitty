@@ -6,9 +6,26 @@ use_setuptools()
 
 from setuptools import setup, find_packages
 
+def reqfile(filepath):
+    """Turns a text file into a list (one element per line)"""
+    result = []
+    import re
+    url_re = re.compile(".+:.+#egg=(.+)")
+    with open(filepath, "r") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            mo = url_re.match(line)
+            if mo is not None:
+                line = mo.group(1)
+            result.append(line)
+    return result
+
+
 setup(
     name="HyperKitty",
-    version="0.1.6",
+    version="0.1.7",
     description="A web interface to access GNU Mailman v3 archives",
     long_description=open('README.rst').read(),
     author='HyperKitty Developers',
@@ -27,5 +44,5 @@ setup(
     #packages=find_packages(exclude=["*.test", "test", "*.test.*"]),
     packages=find_packages(),
     include_package_data=True,
-    install_requires=open('requirements.txt').read(),
+    install_requires=reqfile("requirements.txt"),
     )
